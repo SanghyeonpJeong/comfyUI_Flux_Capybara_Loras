@@ -7,8 +7,3 @@ build:
     - comfyui
   run:
     - pip install -r requirements.txt
-
-weights:
-  - url: ./model/lora.safetensors
-  - url: ./model/unet.pth
-  - url: ./model/vae.pth
