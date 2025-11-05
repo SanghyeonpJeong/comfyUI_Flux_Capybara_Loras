@@ -1,0 +1,14 @@
+build:
+  python_version: "3.10"
+  system_packages: []
+  python_packages:
+    - torch
+    - torchvision
+    - comfyui
+  run:
+    - pip install -r requirements.txt
+
+weights:
+  - url: ./model/lora.safetensors
+  - url: ./model/unet.pth
+  - url: ./model/vae.pth
