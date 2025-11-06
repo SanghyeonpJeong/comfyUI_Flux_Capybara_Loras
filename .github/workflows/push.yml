@@ -20,6 +20,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Check current directory and files
+        run: |
+          pwd
+          ls -al
+          ls -al requirements.txt
+
       - name: Setup Cog
         uses: replicate/setup-cog@v2
         with:
