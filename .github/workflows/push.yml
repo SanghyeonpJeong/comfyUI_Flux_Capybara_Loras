@@ -5,7 +5,7 @@ on:
     inputs:
       model_name:
         required: true
-        description: The name of the Replicate model to publish, e.g `username/modelname`
+        description: 'username/modelname'
 
 jobs:
   push_to_replicate:
@@ -24,6 +24,11 @@ jobs:
         uses: replicate/setup-cog@v2
         with:
           token: ${{ secrets.REPLICATE_CLI_AUTH_TOKEN }}
+
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
 
       - name: Push to Replicate
         run: cog push r8.im/${{ inputs.model_name }}
