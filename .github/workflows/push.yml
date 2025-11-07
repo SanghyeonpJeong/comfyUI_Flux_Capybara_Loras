@@ -25,7 +25,6 @@ jobs:
           pwd
           ls -al
 
-      # Replicate/setup-cog 액션 대신 cog CLI와 환경 변수를 사용하여 인증을 명확히 합니다.
       - name: Setup Cog
         uses: replicate/setup-cog@v2
         
@@ -34,11 +33,14 @@ jobs:
         with:
           python-version: '3.11'
 
-      # ⭐⭐⭐ 핵심 수정: env를 사용하여 인증 토큰 전달 ⭐⭐⭐
+      # ⭐⭐⭐ 핵심 해결책: Docker 레지스트리에 REPLICATE_API_TOKEN으로 명시적 로그인 ⭐⭐⭐
+      - name: Docker Login to Replicate
+        run: echo ${{ secrets.REPLICATE_API_TOKEN }} | docker login https://r8.im -u ${{ github.actor }} --password-stdin
+        # ${{ github.actor }}는 GitHub 사용자 이름으로, Docker 로그인 시 사용됩니다.
+        
+      # ⭐⭐⭐ Push to Replicate: 이제 Docker 로그인에 의존하며 HF 토큰만 전달 ⭐⭐⭐
       - name: Push to Replicate
         run: cog push r8.im/${{ inputs.model_name }}
         env:
-          # Replicate 이미지 푸시 인증을 위한 토큰
-          REPLICATE_API_TOKEN: ${{ secrets.REPLICATE_API_TOKEN }} 
-          # predict.py에서 Hugging Face 모델 다운로드 인증을 위한 토큰
+          # HF 토큰은 predict.py가 모델을 다운로드하는 데 필요하므로 유지합니다.
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
