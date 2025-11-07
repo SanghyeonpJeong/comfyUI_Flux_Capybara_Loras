@@ -1,0 +1,10 @@
+# Local Development Requirements (requirements.txt)
+
+# Cog CLI (Replicate에서 푸시를 위해 필요)
+git+https://github.com/replicate/cog.git@main#egg=cog
+
+# Model Dependencies (from cog.yaml)
+torch==2.1.2
+diffusers==0.29.0
+transformers==4.41.2
+accelerate==0.30.1
