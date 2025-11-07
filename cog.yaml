@@ -1,21 +1,28 @@
+# .cog/yaml (최종 버전: 모델 캐싱 포함)
 build:
-  # GPU 사용 설정
   gpu: true
-  # CUDA 버전 설정
   cuda: "12.1"
-  # Python 버전 3.11로 설정
   python_version: "3.11" 
-  # 필요한 파이썬 패키지를 직접 명시
   python_packages:
     - "torch==2.1.2"
     - "diffusers==0.29.0"
     - "transformers==4.41.2"
     - "accelerate==0.30.1"
+    - "huggingface-hub"  # <-- 모델 다운로드를 위해 추가
 
   run:
-    # LoRA 파일 다운로드 (모델 빌드 시 실행)
+    # 1. Hugging Face Secret을 임시 파일에 저장
+    - echo "${{ secrets.HF_TOKEN }}" > /tmp/HF_TOKEN_SECRET 
+    
+    # 2. HF CLI를 사용하여 대용량 모델을 빌드 이미지 내부 경로(/src/models)에 다운로드
+    # 주의: 'meta-llama/Llama-2-7b-chat-hf'를 실제 Flux Dev 모델 ID로 반드시 교체하세요.
+    - HF_TOKEN=$(cat /tmp/HF_TOKEN_SECRET) huggingface-cli download --local-dir /src/models --repo-id meta-llama/Llama-2-7b-chat-hf --token $HF_TOKEN --cache-dir /root/.cache/huggingface
+    
+    # 3. 임시 Secret 파일 삭제
+    - rm /tmp/HF_TOKEN_SECRET
+    
+    # 4. LoRA 파일 다운로드 (기존 유지)
     - "mkdir -p /src/loras"
     - "curl -L -o /src/loras/Flux_Capybara_v1.safetensors https://github.com/SanghyeonpJeong/comfyUI_Flux_Capybara_Loras/raw/main/Flux_Capybara_v1.safetensors"
 
-# 예측 클래스 지정
 predict: "predict.py:Predictor"

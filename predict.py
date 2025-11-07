@@ -1,38 +1,30 @@
+# predict.py (최종 버전: 로컬 모델 로드)
 import torch
 import os
 from cog import BasePredictor, Input, Path
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
-# Hugging Face 모델 ID를 정의합니다. (사용자님의 실제 모델 ID로 교체하세요)
-MODEL_ID = "Your_HuggingFace_Model/Name" # 예시: "meta-llama/Llama-2-7b-chat-hf"
+# cog.yaml에서 모델을 다운로드한 로컬 경로를 지정합니다.
+LOCAL_MODEL_PATH = "/src/models" 
 
 class Predictor(BasePredictor):
     def setup(self):
-        """모델을 로드하는 동안 초기화합니다."""
-        print("Loading model and tokenizer...")
-
-        # 1. 환경 변수에서 Hugging Face 토큰을 로드합니다.
-        # Replicate Secret에 설정된 이름과 일치해야 합니다 (예: HF_TOKEN)
-        huggingface_token = os.environ.get("HF_TOKEN")
+        """모델을 로컬 캐시에서 로드합니다. (부팅 시간 단축)"""
+        print("Loading model and tokenizer from local cache...")
         
-        if not huggingface_token:
-            print("WARNING: HF_TOKEN environment variable not set. This may cause issues if the model requires authentication.")
-        
-        # 2. 토크나이저와 모델을 로드합니다.
-        # 'use_auth_token' 인수에 로드된 토큰을 전달합니다.
+        # 1. 토크나이저와 모델을 로컬 경로에서 로드합니다.
         self.tokenizer = AutoTokenizer.from_pretrained(
-            MODEL_ID,
-            use_auth_token=huggingface_token
+            LOCAL_MODEL_PATH
         )
         
+        # 2. 모델 로드 시 HF 토큰은 더 이상 필요 없으며, 로컬 경로만 사용합니다.
         self.model = AutoModelForCausalLM.from_pretrained(
-            MODEL_ID,
-            use_auth_token=huggingface_token,
-            torch_dtype=torch.float16,  # 필요에 따라 정밀도 설정
-            device_map="auto"          # 적절한 디바이스 맵핑
+            LOCAL_MODEL_PATH,
+            torch_dtype=torch.float16,  
+            device_map="auto"          
         )
         
-        print("Model loaded successfully.")
+        print("Model loaded successfully. Booting complete.")
 
     def predict(
         self,
@@ -43,25 +35,20 @@ class Predictor(BasePredictor):
     ) -> str:
         """프롬프트를 사용하여 텍스트를 생성합니다."""
         
-        # 3. 입력 프롬프트를 토큰화합니다.
         inputs = self.tokenizer(prompt, return_tensors="pt").to(self.model.device)
         
-        # 4. 텍스트를 생성합니다.
         with torch.no_grad():
             output_tokens = self.model.generate(
                 **inputs,
                 max_new_tokens=max_new_tokens,
                 temperature=temperature,
                 top_p=top_p,
-                do_sample=True, # 샘플링을 활성화하여 temperature 및 top_p 적용
+                do_sample=True,
             )
         
-        # 5. 생성된 토큰을 디코딩하고 불필요한 부분(프롬프트)을 제거합니다.
         output_text = self.tokenizer.decode(
             output_tokens[0], 
             skip_special_tokens=True
         )
         
-        # 생성된 텍스트에서 입력 프롬프트를 제외하고 순수한 응답만 반환합니다.
-        # 이는 모델의 특성에 따라 다를 수 있으므로 조정이 필요할 수 있습니다.
         return output_text.replace(prompt, "", 1).strip()

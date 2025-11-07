@@ -1,3 +1,4 @@
+# .github/workflows/push.yml (최종 버전)
 name: Push to Replicate
 
 on:
@@ -19,12 +20,7 @@ jobs:
 
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Check current directory and files
-        run: |
-          pwd
-          ls -al
-
+        
       - name: Setup Cog
         uses: replicate/setup-cog@v2
         
@@ -33,14 +29,13 @@ jobs:
         with:
           python-version: '3.11'
 
-      # ⭐⭐⭐ 핵심 해결책: Docker 레지스트리에 REPLICATE_API_TOKEN으로 명시적 로그인 ⭐⭐⭐
+      # Docker 레지스트리에 명시적 로그인 (인증 오류 해결)
       - name: Docker Login to Replicate
         run: echo ${{ secrets.REPLICATE_API_TOKEN }} | docker login https://r8.im -u ${{ github.actor }} --password-stdin
-        # ${{ github.actor }}는 GitHub 사용자 이름으로, Docker 로그인 시 사용됩니다.
         
-      # ⭐⭐⭐ Push to Replicate: 이제 Docker 로그인에 의존하며 HF 토큰만 전달 ⭐⭐⭐
-      - name: Push to Replicate
+      # ⭐ Build/Push 단계: HF_TOKEN을 cog.yaml의 run 명령에 전달해야 합니다. ⭐
+      - name: Build and Push to Replicate
         run: cog push r8.im/${{ inputs.model_name }}
         env:
-          # HF 토큰은 predict.py가 모델을 다운로드하는 데 필요하므로 유지합니다.
+          # cog.yaml의 run 명령에서 모델 다운로드 인증을 위해 사용됩니다.
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
