@@ -1,9 +1,20 @@
+# cog.yaml (이렇게 수정해 주세요)
+
 build:
-  python_version: "3.11"
-  system_packages: []
+  # 아래 python_packages는 패키지를 지정하는 표준 방식입니다.
+  gpu: true
+  cuda: "12.1"
+  python_version: "3.11" # 로그에 3.11이 보였으므로 3.10 대신 3.11로 변경
   python_packages:
-    - torch
-    - torchvision
-    # comfyui는 pip에서 설치가 따로 안 될 수 있으므로 별도 관리(아래 requirements.txt 일치)
+    - "torch==2.1.2"
+    - "diffusers==0.29.0"
+    - "transformers==4.41.2"
+    - "accelerate==0.30.1"
+
   run:
-    - pip install -r requirements.txt
+    # 님의 LoRA 파일을 다운로드합니다.
+    - "mkdir -p /src/loras"
+    - "curl -L -o /src/loras/Flux_Capybara_v1.safetensors https://github.com/SanghyeonpJeong/comfyUI_Flux_Capybara_Loras/raw/main/Flux_Capybara_v1.safetensors"
+
+# 최종적으로 build 단계에서 모든 패키지를 설치합니다.
+predict: "predict.py:Predictor"
