@@ -11,17 +11,15 @@ build:
     - "huggingface-hub[cli]" 
 
   run:
-    # 🌟🌟🌟 2. 핵심 수정: Python 스크립트를 직접 실행 (Perplexity's Idea) 🌟🌟🌟
+    # 🌟🌟🌟 2. 핵심 수정: repo_id를 실제 Flux Dev 모델 ID로 변경 🌟🌟🌟
     # 쉘(PATH) 문제를 완벽하게 우회합니다.
-    # 'meta-llama/Llama-2-7b-chat-hf'를 실제 Flux Dev 모델 ID로 반드시 교체하세요.
-    # (주의: 이 한 줄은 YAML 구문 때문에 따옴표 처리가 복잡합니다. 그대로 복사하세요.)
-    - 'python -c "import os; from huggingface_hub import snapshot_download; snapshot_download(repo_id=\"meta-llama/Llama-2-7b-chat-hf\", local_dir=\"/src/models\", token=os.environ.get(\"REPLICATE_SECRET_HF_TOKEN\"), cache_dir=\"/root/.cache/huggingface\")"'
+    - 'python -c "import os; from huggingface_hub import snapshot_download; snapshot_download(repo_id=\"black-forest-labs/FLUX.1-dev\", local_dir=\"/src/models\", token=os.environ.get(\"REPLICATE_SECRET_HF_TOKEN\"), cache_dir=\"/root/.cache/huggingface\")"'
     
     # 3. LoRA 파일 다운로드
     - "mkdir -p /src/loras"
     - "curl -L -o /src/loras/Flux_Capybara_v1.safetensors https://github.com/SanghyeonpJeong/comfyUI_Flux_Capybara_Loras/raw/main/Flux_Capybara_v1.safetensors"
     
     # Git이 변경 사항을 인식하도록 강제 주석 추가
-    # Force update v11
+    # Force update v12
 
 predict: "predict.py:Predictor"
