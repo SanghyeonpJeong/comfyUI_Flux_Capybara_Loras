@@ -10,16 +10,16 @@ build:
     - "huggingface-hub" 
 
   run:
-    # 🌟🌟🌟 핵심 수정: PATH 설정과 huggingface-cli 실행을 하나의 RUN 명령으로 통합 🌟🌟🌟
-    # &&를 사용하여 동일한 쉘 세션에서 실행되도록 보장합니다.
+    # 🌟🌟🌟 핵심 수정: 'huggingface-cli'를 올바른 명령어 'huggingface-hub'로 변경 🌟🌟🌟
+    # PATH 설정과 올바른 명령어를 &&로 연결합니다.
     # 주의: 'meta-llama/Llama-2-7b-chat-hf'를 실제 Flux Dev 모델 ID로 반드시 교체하세요.
-    - "export PATH=\"$(pyenv prefix)/bin:$PATH\" && huggingface-cli download --local-dir /src/models --repo-id meta-llama/Llama-2-7b-chat-hf --token ${REPLICATE_SECRET_HF_TOKEN} --cache-dir /root/.cache/huggingface"
+    - "export PATH=\"$(pyenv prefix)/bin:$PATH\" && huggingface-hub download --local-dir /src/models --repo-id meta-llama/Llama-2-7b-chat-hf --token ${REPLICATE_SECRET_HF_TOKEN} --cache-dir /root/.cache/huggingface"
     
-    # 2. LoRA 파일 다운로드 (이것은 별개의 RUN 명령으로 실행되어도 괜찮습니다)
+    # 2. LoRA 파일 다운로드
     - "mkdir -p /src/loras"
     - "curl -L -o /src/loras/Flux_Capybara_v1.safetensors https://github.com/SanghyeonpJeong/comfyUI_Flux_Capybara_Loras/raw/main/Flux_Capybara_v1.safetensors"
     
-    # 🌟🌟🌟 Git이 변경 사항을 인식하도록 강제 주석 추가 🌟🌟🌟
-    # Force update v6
+    # Git이 변경 사항을 인식하도록 강제 주석 추가
+    # Force update v7
 
 predict: "predict.py:Predictor"
