@@ -1,29 +1,50 @@
-# predict.py (최종 버전: 로컬 모델 로드)
 import torch
 import os
 from cog import BasePredictor, Input, Path
 from transformers import AutoModelForCausalLM, AutoTokenizer
+# 🌟🌟🌟 (신규) 런타임에 snapshot_download를 사용하기 위해 import 🌟🌟🌟
+from huggingface_hub import snapshot_download
 
-# cog.yaml에서 모델을 다운로드한 로컬 경로를 지정합니다.
-LOCAL_MODEL_PATH = "/src/models" 
+# (주의) cog.yaml에서 캐시하지 않으므로, 이 경로는 이제 로컬 경로가 아닙니다.
+MODEL_ID = "black-forest-labs/FLUX.1-dev"
+LORA_PATH = "/src/loras/Flux_Capybara_v1.safetensors"
 
 class Predictor(BasePredictor):
     def setup(self):
-        """모델을 로컬 캐시에서 로드합니다. (부팅 시간 단축)"""
-        print("Loading model and tokenizer from local cache...")
+        """🌟🌟🌟 (수정) 런타임에 모델을 다운로드하고 로드합니다 🌟🌟🌟"""
+        print("Booting... Attempting to download model (this may take a while)...")
         
-        # 1. 토크나이저와 모델을 로컬 경로에서 로드합니다.
+        # 1. 'push.yml'의 env: 에서 전달된 HF_TOKEN을 읽습니다.
+        huggingface_token = os.environ.get("HF_TOKEN")
+        
+        if not huggingface_token:
+            print("WARNING: HF_TOKEN environment variable not set. Download may fail.")
+        
+        # 2. 런타임에 모델 다운로드 (22GB)
+        # (이것이 타임아웃될 수 있지만, 유일한 방법입니다.)
+        downloaded_model_path = snapshot_download(
+            repo_id=MODEL_ID,
+            token=huggingface_token,
+            cache_dir="/root/.cache/huggingface"
+            # local_dir="/src/models" # 캐시를 사용하도록 local_dir 주석 처리
+        )
+        print("Model download complete.")
+
+        # 3. 로컬 캐시 경로에서 모델 로드
         self.tokenizer = AutoTokenizer.from_pretrained(
-            LOCAL_MODEL_PATH
+            downloaded_model_path
         )
-        
-        # 2. 모델 로드 시 HF 토큰은 더 이상 필요 없으며, 로컬 경로만 사용합니다.
         self.model = AutoModelForCausalLM.from_pretrained(
-            LOCAL_MODEL_PATH,
-            torch_dtype=torch.float16,  
-            device_map="auto"          
+            downloaded_model_path,
+            torch_dtype=torch.float16,
+            device_map="auto"
         )
         
+        # 4. LoRA 로드 (필요한 경우)
+        # (이 부분은 사용자님의 실제 LoRA 로드 코드로 대체해야 합니다)
+        # self.model.load_adapter(LORA_PATH) 
+        # print(f"LoRA loaded from {LORA_PATH}")
+
         print("Model loaded successfully. Booting complete.")
 
     def predict(
