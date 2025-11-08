@@ -28,13 +28,12 @@ jobs:
         with:
           python-version: '3.11'
 
-      # Docker 레지스트리에 명시적 로그인 (Replicate 토큰 사용)
+      # Docker 레지스트리에 명시적 로그인
       - name: Docker Login to Replicate
         run: echo ${{ secrets.REPLICATE_API_TOKEN }} | docker login https://r8.im -u ${{ github.actor }} --password-stdin
         
-      # 🌟🌟🌟 핵심 수정: HF_TOKEN_NEW Secret을 읽도록 변경 🌟🌟🌟
+      # 🌟🌟🌟 핵심 수정: --build-arg를 사용하여 HF_TOKEN 전달 🌟🌟🌟
       - name: Build and Push to Replicate
-        run: cog push r8.im/${{ inputs.model_name }}
-        env:
-          # HF_TOKEN_NEW Secret의 값을 HF_TOKEN 환경 변수로 전달합니다.
-          HF_TOKEN: ${{ secrets.HF_TOKEN_NEW }}
+        # HF_TOKEN Secret을 HF_TOKEN_BUILD_ARG라는 빌드 인자로 전달합니다.
+        run: cog push r8.im/${{ inputs.model_name }} --build-arg HF_TOKEN_BUILD_ARG=${{ secrets.HF_TOKEN }}
+        # env: 는 여기서는 필요 없습니다.

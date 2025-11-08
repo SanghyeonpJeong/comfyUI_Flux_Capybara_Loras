@@ -7,20 +7,28 @@ build:
     - "diffusers==0.29.0"
     - "transformers==4.41.2"
     - "accelerate==0.30.1"
-    # 🌟 CLI 도구를 포함하여 설치 (v9 수정)
     - "huggingface-hub[cli]" 
 
   run:
-    # 🌟🌟🌟 1. 'os.environ.get("HF_TOKEN")'을 읽습니다 (v13 수정)
-    # push.yml의 env: 섹션에서 전달된 HF_TOKEN 값을 읽습니다.
-    # 'meta-llama/Llama-2-7b-chat-hf'를 실제 Flux Dev 모델 ID로 반드시 교체하세요.
-    - 'python -c "import os; from huggingface_hub import snapshot_download; snapshot_download(repo_id=\"black-forest-labs/FLUX.1-dev\", local_dir=\"/src/models\", token=os.environ.get(\"HF_TOKEN\"), cache_dir=\"/root/.cache/huggingface\")"'
+    # 🌟🌟🌟 1. 빌드 인자(HF_TOKEN_BUILD_ARG)를 환경 변수(HF_TOKEN)로 설정 🌟🌟🌟
+    # 🌟🌟🌟 2. Python 스크립트가 이 환경 변수를 읽도록 함 🌟🌟🌟
+    # | (파이프)를 사용하여 여러 줄 명령어를 하나의 RUN 스텝으로 만듭니다.
+    - |
+      export HF_TOKEN=${HF_TOKEN_BUILD_ARG}
+      python -c "import os; from huggingface_hub import snapshot_download; \
+      print('Attempting to download model... Token starts with:', os.environ.get('HF_TOKEN')[:4]); \
+      snapshot_download( \
+        repo_id=\"black-forest-labs/FLUX.1-dev\", \
+        local_dir=\"/src/models\", \
+        token=os.environ.get(\"HF_TOKEN\"), \
+        cache_dir=\"/root/.cache/huggingface\" \
+      )"
     
     # 2. LoRA 파일 다운로드
     - "mkdir -p /src/loras"
     - "curl -L -o /src/loras/Flux_Capybara_v1.safetensors https://github.com/SanghyeonpJeong/comfyUI_Flux_Capybara_Loras/raw/main/Flux_Capybara_v1.safetensors"
     
     # Git이 변경 사항을 인식하도록 강제 주석 추가
-    # Force update v14
+    # Force update v15
 
 predict: "predict.py:Predictor"
