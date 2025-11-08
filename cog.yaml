@@ -10,15 +10,16 @@ build:
     - "huggingface-hub[cli]" 
 
   run:
-    # 🌟🌟🌟 1. (수정) 모든 명령을 &&로 연결하여 하나의 RUN 명령(한 줄)으로 통합 🌟🌟🌟
-    # cog의 "no new lines" 문법 오류를 해결합니다.
-    - "echo 'Reading token...' && HF_TOKEN_VALUE=$(cat /run/secrets/HF_TOKEN_FROM_FILE) && python -c \"import os; from huggingface_hub import snapshot_download; print('Attempting to download model...'); snapshot_download(repo_id=\\\"black-forest-labs/FLUX.1-dev\\\", local_dir=\\\"/src/models\\\", token='${HF_TOKEN_VALUE}', cache_dir=\\\"/root/.cache/huggingface\\\")\""
+    # 🌟🌟🌟 1. (수정) /run/secrets/my_hf_secret 에서 토큰을 읽습니다. 🌟🌟🌟
+    # (push.yml의 --secret id=... 와 이름이 일치해야 합니다)
+    # 🌟🌟🌟 2. (수정) 모든 명령을 &&로 연결하여 '줄 바꿈' 오류를 해결합니다. 🌟🌟🌟
+    - "echo 'Reading token from secret env...' && HF_TOKEN_VALUE=$(cat /run/secrets/my_hf_secret) && python -c \"import os; from huggingface_hub import snapshot_download; print('Attempting to download model...'); snapshot_download(repo_id=\\\"black-forest-labs/FLUX.1-dev\\\", local_dir=\\\"/src/models\\\", token='${HF_TOKEN_VALUE}', cache_dir=\\\"/root/.cache/huggingface\\\")\""
     
-    # 2. LoRA 파일 다운로드
+    # 2. LoRA 파일 다운로드 (URL 경로 수정)
     - "mkdir -p /src/loras"
     - "curl -L -o /src/loras/Flux_Capybara_v1.safetensors https://github.com/SanghyeonpJeong/comfyUI_Flux_Capybara_Loras/raw/main/Flux_Capybara_v1.safetensors"
     
     # Git이 변경 사항을 인식하도록 강제 주석 추가
-    # Force update v17
+    # Force update v18
 
 predict: "predict.py:Predictor"
