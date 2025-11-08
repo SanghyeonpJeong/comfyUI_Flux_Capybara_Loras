@@ -11,15 +11,16 @@ build:
     - "huggingface-hub[cli]" 
 
   run:
-    # 🌟🌟🌟 2. 핵심 수정: repo_id를 실제 Flux Dev 모델 ID로 변경 🌟🌟🌟
-    # 쉘(PATH) 문제를 완벽하게 우회합니다.
-    - 'python -c "import os; from huggingface_hub import snapshot_download; snapshot_download(repo_id=\"black-forest-labs/FLUX.1-dev\", local_dir=\"/src/models\", token=os.environ.get(\"REPLICATE_SECRET_HF_TOKEN\"), cache_dir=\"/root/.cache/huggingface\")"'
+    # 🌟🌟🌟 2. 핵심 수정: 빌드 인자(${...})를 환경 변수(REPLICATE_SECRET_HF_TOKEN=)로 주입 🌟🌟🌟
+    # Python의 os.environ.get()이 토큰을 읽을 수 있도록 설정합니다.
+    # 'meta-llama/Llama-2-7b-chat-hf'를 실제 Flux Dev 모델 ID로 반드시 교체하세요.
+    - 'REPLICATE_SECRET_HF_TOKEN=${REPLICATE_SECRET_HF_TOKEN} python -c "import os; from huggingface_hub import snapshot_download; snapshot_download(repo_id=\"black-forest-labs/FLUX.1-dev\", local_dir=\"/src/models\", token=os.environ.get(\"REPLICATE_SECRET_HF_TOKEN\"), cache_dir=\"/root/.cache/huggingface\")"'
     
     # 3. LoRA 파일 다운로드
     - "mkdir -p /src/loras"
     - "curl -L -o /src/loras/Flux_Capybara_v1.safetensors https://github.com/SanghyeonpJeong/comfyUI_Flux_Capybara_Loras/raw/main/Flux_Capybara_v1.safetensors"
     
     # Git이 변경 사항을 인식하도록 강제 주석 추가
-    # Force update v12
+    # Force update v13
 
 predict: "predict.py:Predictor"
