@@ -7,20 +7,20 @@ build:
     - "diffusers==0.29.0"
     - "transformers==4.41.2"
     - "accelerate==0.30.1"
-    # 🌟🌟🌟 핵심 수정: CLI 도구를 포함하여 설치합니다 🌟🌟🌟
+    # 🌟 1. CLI 도구를 포함하여 설치 (필수)
     - "huggingface-hub[cli]" 
 
   run:
-    # 🌟 1. PATH 설정과 'huggingface-hub' 명령어를 &&로 연결합니다.
-    # 이제 [cli]를 설치했으므로 'huggingface-hub' 명령어가 존재합니다.
+    # 🌟🌟🌟 2. 'huggingface-hub'를 Python 모듈('huggingface_hub.cli')로 직접 실행 🌟🌟🌟
+    # 'PATH' 문제와 'command not found' 오류를 완벽하게 우회합니다.
     # 주의: 'meta-llama/Llama-2-7b-chat-hf'를 실제 Flux Dev 모델 ID로 반드시 교체하세요.
-    - "export PATH=\"$(pyenv prefix)/bin:$PATH\" && huggingface-hub download --local-dir /src/models --repo-id meta-llama/Llama-2-7b-chat-hf --token ${REPLICATE_SECRET_HF_TOKEN} --cache-dir /root/.cache/huggingface"
+    - "python -m huggingface_hub.cli download --local-dir /src/models --repo-id meta-llama/Llama-2-7b-chat-hf --token ${REPLICATE_SECRET_HF_TOKEN} --cache-dir /root/.cache/huggingface"
     
-    # 2. LoRA 파일 다운로드
+    # 3. LoRA 파일 다운로드
     - "mkdir -p /src/loras"
     - "curl -L -o /src/loras/Flux_Capybara_v1.safetensors https://github.com/SanghyeonpJeong/comfyUI_Flux_Capybara_Loras/raw/main/Flux_Capybara_v1.safetensors"
     
     # Git이 변경 사항을 인식하도록 강제 주석 추가
-    # Force update v9
+    # Force update v10
 
 predict: "predict.py:Predictor"
