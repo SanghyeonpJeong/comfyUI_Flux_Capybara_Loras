@@ -32,8 +32,11 @@ jobs:
       - name: Docker Login to Replicate
         run: echo ${{ secrets.REPLICATE_API_TOKEN }} | docker login https://r8.im -u ${{ github.actor }} --password-stdin
         
-      # 🌟🌟🌟 핵심 수정: --build-arg를 사용하여 HF_TOKEN 전달 🌟🌟🌟
+      # 🌟🌟🌟 1. (신규) HF_TOKEN을 파일로 저장합니다. 🌟🌟🌟
+      - name: Create HF_TOKEN secret file
+        run: echo -n ${{ secrets.HF_TOKEN }} > hf_token.txt
+      
+      # 🌟🌟🌟 2. (수정) --secret 플래그를 사용하여 cog push 실행 🌟🌟🌟
       - name: Build and Push to Replicate
-        # HF_TOKEN Secret을 HF_TOKEN_BUILD_ARG라는 빌드 인자로 전달합니다.
-        run: cog push r8.im/${{ inputs.model_name }} --build-arg HF_TOKEN_BUILD_ARG=${{ secrets.HF_TOKEN }}
-        # env: 는 여기서는 필요 없습니다.
+        # hf_token.txt 파일을 HF_TOKEN_FROM_FILE 라는 ID로 빌드 환경에 전달합니다.
+        run: cog push r8.im/${{ inputs.model_name }} --secret id=HF_TOKEN_FROM_FILE,src=hf_token.txt
