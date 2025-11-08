@@ -18,5 +18,8 @@ build:
     # 2. LoRA 파일 다운로드 (이것은 별개의 RUN 명령으로 실행되어도 괜찮습니다)
     - "mkdir -p /src/loras"
     - "curl -L -o /src/loras/Flux_Capybara_v1.safetensors https://github.com/SanghyeonpJeong/comfyUI_Flux_Capybara_Loras/raw/main/Flux_Capybara_v1.safetensors"
+    
+    # 🌟🌟🌟 Git이 변경 사항을 인식하도록 강제 주석 추가 🌟🌟🌟
+    # Force update v6
 
 predict: "predict.py:Predictor"
