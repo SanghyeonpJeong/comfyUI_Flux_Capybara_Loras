@@ -1,32 +1,43 @@
 import torch
 import os
 from cog import BasePredictor, Input, Path
+# 🌟 (수정) Diffusers의 FluxPipeline을 import
 from diffusers import FluxPipeline
-# 🌟 (삭제) snapshot_download import 삭제
+# 🌟 (신규) 런타임에 snapshot_download를 사용하기 위해 import
+from huggingface_hub import snapshot_download
 
-# 🌟 (수정) 기반 이미지(fofr/flux-dev)가 모델을 저장한 경로
 MODEL_ID = "black-forest-labs/FLUX.1-dev"
 LORA_PATH = "/src/loras/Flux_Capybara_v1.safetensors"
 
 class Predictor(BasePredictor):
     def setup(self):
-        """🌟 (수정) 런타임 다운로드 '삭제'. 기반 이미지의 모델을 로드합니다. 🌟"""
-        print("Booting... Loading FLUX.1-dev pipeline from base image...")
+        """🌟 (수정) 런타임에 FluxPipeline을 다운로드하고 로드합니다 🌟"""
+        print("Booting... Attempting to download FLUX.1-dev pipeline (this may take a while)...")
         
-        # 1. 런타임에 Gated Model 다운로드 (삭제됨)
-        # (기반 이미지에 이미 포함되어 있음)
+        # 1. 'push.yml'의 env: 에서 전달된 HF_TOKEN을 읽습니다.
+        huggingface_token = os.environ.get("HF_TOKEN")
         
-        # 2. 로컬 캐시 경로에서 모델 로드
-        # (Diffusers는 MODEL_ID를 보고, 이미 캐시된 것을 확인하고 즉시 로드합니다)
+        if not huggingface_token:
+            print("WARNING: HF_TOKEN environment variable not set. Download may fail.")
+        
+        # 2. 런타임에 Gated Model 다운로드 (22GB)
+        downloaded_model_path = snapshot_download(
+            repo_id=MODEL_ID,
+            token=huggingface_token,
+            cache_dir="/root/.cache/huggingface"
+        )
+        print("Model download complete.")
+
+        # 3. 로컬 캐시 경로에서 모델 로드
         self.pipe = FluxPipeline.from_pretrained(
-            MODEL_ID, # 🌟 토큰 없이 ID만 전달
+            downloaded_model_path,
             torch_dtype=torch.bfloat16
         )
         
-        # 3. VRAM 절약을 위해 CPU 오프로드
+        # 4. VRAM 절약을 위해 CPU 오프로드
         self.pipe.enable_model_cpu_offload()
         
-        # 4. LoRA 로드 (필수!)
+        # 5. LoRA 로드
         # (이 부분의 주석을 해제하여 LoRA를 적용합니다)
         self.pipe.load_lora_weights(LORA_PATH)
         print(f"LoRA loaded from {LORA_PATH}")
@@ -40,7 +51,7 @@ class Predictor(BasePredictor):
         width: int = Input(description="Width of the image.", default=1024),
         num_inference_steps: int = Input(description="Number of inference steps.", default=50),
         guidance_scale: float = Input(description="Guidance scale.", default=3.5)
-    ) -> Path: 
+    ) -> Path: # 🌟 (수정) 반환 타입이 Path(파일)로 변경되었습니다.
         """프롬프트를 사용하여 이미지를 생성합니다."""
         
         image = self.pipe(
@@ -50,7 +61,6 @@ class Predictor(BasePredictor):
             guidance_scale=guidance_scale,
             num_inference_steps=num_inference_steps,
             generator=torch.Generator("cpu").manual_seed(0)
-            # cross_attention_kwargs={"scale": 0.93} # LoRA 스케일 예시
         ).images[0]
         
         output_path = "/tmp/output.png"

@@ -30,6 +30,10 @@ jobs:
       - name: Docker Login to Replicate
         run: echo ${{ secrets.REPLICATE_API_TOKEN }} | docker login https://r8.im -u ${{ github.actor }} --password-stdin
         
-      # 🌟 (수정) HF_TOKEN 관련 'env:', '--secret', '--build-arg' 모두 '삭제'
+      # 🌟 (수정) env:를 사용하여 HF_TOKEN을 '런타임'에 전달
       - name: Build and Push to Replicate
+        env:
+          # 이 HF_TOKEN을 predict.py의 os.environ.get()이 읽을 것입니다.
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        # 모델 이름을 하드코딩 (수동 입력창 제거)
         run: cog push r8.im/sanghyeonpjeong/flux_capybara_lora
