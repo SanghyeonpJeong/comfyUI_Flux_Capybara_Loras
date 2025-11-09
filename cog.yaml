@@ -1,40 +1,21 @@
 build:
-  gpu: true
-  cuda: "12.1"
-  python_version: "3.11" 
+  # 🌟 1. (수정) 'fofr/flux-dev'를 기반 이미지로 사용
+  # 이 이미지는 22GB 모델과 모든 종속성을 '이미' 포함하고 있습니다.
+  # (이 이미지가 Flux.1-dev를 포함하는지 확인이 필요하지만, 성공 케이스들이 이 방식을 사용합니다)
+  base_image: "r8.im/fofr/flux-dev:latest" 
+
+  # 🌟 2. (수정) NumPy 1.x/2.x 충돌 해결 (이것만 추가)
   python_packages:
-    - "torch==2.1.2"
-    - "diffusers==0.29.0"
-    - "transformers==4.41.2"
-    - "accelerate==0.30.1"
-    - "huggingface-hub[cli]"
-    # 🌟 v23의 NumPy 1.x/2.x 충돌 해결을 위해 버전 강제
     - "numpy<2.0" 
 
-  # 🌟 1. (신규) push.yml에서 전달할 빌드 인자를 선언합니다.
-  build_args:
-    HF_TOKEN_BUILD_ARG:
-
   run:
-    # 🌟 2. (수정) 빌드 인자(HF_TOKEN_BUILD_ARG)를 환경 변수(HF_TOKEN)로 설정
-    # 🌟 3. (수정) Python 스크립트가 이 환경 변수를 읽어 '빌드 타임'에 다운로드
-    # | (파이프)를 사용하여 여러 줄 명령어를 하나의 RUN 스텝으로 만듭니다.
-    - |
-      export HF_TOKEN=${HF_TOKEN_BUILD_ARG}
-      python -c "import os; from huggingface_hub import snapshot_download; \
-      print('Build-Time Download Started... Token starts with:', os.environ.get('HF_TOKEN')[:4]); \
-      snapshot_download( \
-        repo_id=\"black-forest-labs/FLUX.1-dev\", \
-        local_dir=\"/src/models\", \
-        token=os.environ.get(\"HF_TOKEN\"), \
-        cache_dir=\"/root/.cache/huggingface\" \
-      )"
+    # 🌟 3. (수정) 22GB 모델 다운로드 '삭제'
     
-    # 4. LoRA 파일 다운로드
+    # LoRA 파일 다운로드 (이것만 남깁니다)
     - "mkdir -p /src/loras"
     - "curl -L -o /src/loras/Flux_Capybara_v1.safetensors https://github.com/SanghyeonpJeong/comfyUI_Flux_Capybara_Loras/raw/main/Flux_Capybara_v1.safetensors"
     
     # Git이 변경 사항을 인식하도록 강제 주석 추가
-    # Force update v25
+    # Force update v27
 
 predict: "predict.py:Predictor"

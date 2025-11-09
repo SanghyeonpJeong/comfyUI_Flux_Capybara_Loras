@@ -26,18 +26,10 @@ jobs:
         with:
           python-version: '3.11'
 
-      # Docker 레지스트리에 명시적 로그인 (Replicate 토큰 사용)
+      # Docker 레지스트리에 명시적 로그인
       - name: Docker Login to Replicate
         run: echo ${{ secrets.REPLICATE_API_TOKEN }} | docker login https://r8.im -u ${{ github.actor }} --password-stdin
         
-      # 🌟 (수정) 1. 'cog build'와 'cog push'를 분리
-      - name: Build Docker Image with HF_TOKEN
-        # 🌟 'cog build'는 '--build-arg'를 지원합니다!
-        # 🌟 HF_TOKEN Secret을 HF_TOKEN_BUILD_ARG라는 빌드 인자로 전달합니다.
-        run: |
-          cog build -t r8.im/sanghyeonpjeong/flux_capybara_lora \
-            --build-arg HF_TOKEN_BUILD_ARG=${{ secrets.HF_TOKEN }}
-
-      # 🌟 (수정) 2. 방금 빌드한 이미지를 푸시
-      - name: Push Image to Replicate
+      # 🌟 (수정) HF_TOKEN 관련 'env:', '--secret', '--build-arg' 모두 '삭제'
+      - name: Build and Push to Replicate
         run: cog push r8.im/sanghyeonpjeong/flux_capybara_lora
