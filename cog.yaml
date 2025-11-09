@@ -1,8 +1,8 @@
 build:
   # 🌟 1. (수정) 'fofr/flux-dev'를 기반 이미지로 사용
-  # (이 이미지가 Flux.1-dev를 포함하는지 확인이 필요하지만, 성공 케이스들이 이 방식을 사용합니다)
-  # 🌟 (수정) v27의 문법 오류 해결: 'build:' 블록 '안'으로 이동
-  base_image: "r8.im/fofr/flux-dev:latest" 
+  # 🌟 (수정) v28의 문법 오류 해결: 'base_image:' -> 'image:'
+  # 🌟 (수정) v28의 문법 오류 해결: 'build:' 블록 '안'으로 이동
+  image: "r8.im/fofr/flux-dev:latest" 
 
   # 🌟 2. (수정) NumPy 1.x/2.x 충돌 해결 (이것만 추가)
   python_packages:
@@ -16,6 +16,6 @@ build:
     - "curl -L -o /src/loras/Flux_Capybara_v1.safetensors https://github.com/SanghyeonpJeong/comfyUI_Flux_Capybara_Loras/raw/main/Flux_Capybara_v1.safetensors"
     
     # Git이 변경 사항을 인식하도록 강제 주석 추가
-    # Force update v28
+    # Force update v29
 
 predict: "predict.py:Predictor"

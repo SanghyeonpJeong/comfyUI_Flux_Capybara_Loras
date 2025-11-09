@@ -5,7 +5,6 @@ from diffusers import FluxPipeline
 # 🌟 (삭제) snapshot_download import 삭제
 
 # 🌟 (수정) 기반 이미지(fofr/flux-dev)가 모델을 저장한 경로
-# (이 경로는 fofr/flux-dev의 cog.yaml을 참조하여 확인했습니다)
 MODEL_ID = "black-forest-labs/FLUX.1-dev"
 LORA_PATH = "/src/loras/Flux_Capybara_v1.safetensors"
 
@@ -44,8 +43,6 @@ class Predictor(BasePredictor):
     ) -> Path: 
         """프롬프트를 사용하여 이미지를 생성합니다."""
         
-        # 🌟 (수정) LoRA를 적용했으므로, predict 시 lora_scale을 전달할 수 있습니다.
-        # (단, LoRA 로드 방식에 따라 이 코드는 달라질 수 있습니다.)
         image = self.pipe(
             prompt=prompt,
             height=height,
