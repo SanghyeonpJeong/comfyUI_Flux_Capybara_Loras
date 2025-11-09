@@ -7,6 +7,5 @@ build:
   run:
     - "mkdir -p /src/loras"
     - "curl -L -o /src/loras/Flux_Capybara_v1.safetensors https://github.com/SanghyeonpJeong/comfyUI_Flux_Capybara_Loras/raw/main/Flux_Capybara_v1.safetensors"
-    # 기타 필요한 초기화 작업들...
 
 predict: "predict.py:Predictor"

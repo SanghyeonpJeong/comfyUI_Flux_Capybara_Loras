@@ -8,26 +8,24 @@ LORA_PATH = "/src/loras/Flux_Capybara_v1.safetensors"
 
 class Predictor(BasePredictor):
     def setup(self):
-        print("Booting... Loading FLUX.1-dev pipeline from base image...")
-
-        # 모델은 기반 이미지에 이미 포함되어 있으니 새로 다운로드하지 않음
+        # 기반 이미지에 모델 포함, 런타임 다운로드 삭제
+        print("Booting... Loading FLUX.1-dev pipeline...")
         self.pipe = FluxPipeline.from_pretrained(
             MODEL_ID,
             torch_dtype=torch.bfloat16
         )
         self.pipe.enable_model_cpu_offload()
-
         self.pipe.load_lora_weights(LORA_PATH)
         print(f"LoRA loaded from {LORA_PATH}")
-        print("FluxPipeline loaded successfully. Booting complete.")
+        print("Pipeline loaded. Booting complete.")
 
     def predict(
         self,
-        prompt: str = Input(description="Prompt for the model."),
-        height: int = Input(description="Height of the image.", default=1024),
-        width: int = Input(description="Width of the image.", default=1024),
-        num_inference_steps: int = Input(description="Number of inference steps.", default=50),
-        guidance_scale: float = Input(description="Guidance scale.", default=3.5)
+        prompt: str = Input(description="Prompt"),
+        height: int = Input(description="Height", default=1024),
+        width: int = Input(description="Width", default=1024),
+        num_inference_steps: int = Input(description="Num steps", default=50),
+        guidance_scale: float = Input(description="Guidance scale", default=3.5)
     ) -> Path:
         image = self.pipe(
             prompt=prompt,
