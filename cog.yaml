@@ -1,28 +1,21 @@
 build:
-  gpu: true
-  cuda: "12.1"
-  python_version: "3.11" 
+  # 🌟 1. (수정) 'fofr/flux-dev'를 기반 이미지로 사용
+  # (이 이미지가 Flux.1-dev를 포함하는지 확인이 필요하지만, 성공 케이스들이 이 방식을 사용합니다)
+  # 🌟 (수정) v27의 문법 오류 해결: 'build:' 블록 '안'으로 이동
+  base_image: "r8.im/fofr/flux-dev:latest" 
+
+  # 🌟 2. (수정) NumPy 1.x/2.x 충돌 해결 (이것만 추가)
   python_packages:
-    - "torch==2.1.2"
-    - "diffusers==0.29.0"
-    - "transformers==4.41.2"
-    - "accelerate==0.30.1"
-    - "huggingface-hub[cli]"
-    # NumPy 1.x/2.x 충돌 해결
     - "numpy<2.0" 
 
-  # 🌟 (수정) 'build_args:' 섹션 '삭제'
-
   run:
-    # 🌟 1. (수정) Python이 /run/secrets/my_hf_secret 파일을 직접 열어서 토큰을 읽습니다.
-    # 🌟 2. (수정) '줄 바꿈' 오류를 피하기 위해 모든 Python 명령을 한 줄로 만듭니다.
-    - "python -c \"from huggingface_hub import snapshot_download; print('Attempting to download model by reading secret file...'); snapshot_download(repo_id='black-forest-labs/FLUX.1-dev', local_dir='/src/models', token=open('/run/secrets/my_hf_secret').read().strip(), cache_dir='/root/.cache/huggingface')\""
+    # 🌟 3. (수정) 22GB 모델 다운로드 '삭제'
     
-    # 2. LoRA 파일 다운로드
+    # LoRA 파일 다운로드 (이것만 남깁니다)
     - "mkdir -p /src/loras"
     - "curl -L -o /src/loras/Flux_Capybara_v1.safetensors https://github.com/SanghyeonpJeong/comfyUI_Flux_Capybara_Loras/raw/main/Flux_Capybara_v1.safetensors"
     
     # Git이 변경 사항을 인식하도록 강제 주석 추가
-    # Force update v26
+    # Force update v28
 
 predict: "predict.py:Predictor"
