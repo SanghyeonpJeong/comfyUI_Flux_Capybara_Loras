@@ -1,36 +1,30 @@
 import torch
 import os
 from cog import BasePredictor, Input, Path
-# 🌟 (수정) Diffusers의 FluxPipeline을 import
 from diffusers import FluxPipeline
 
-MODEL_ID = "black-forest-labs/FLUX.1-dev"
+# 🌟 (수정) cog.yaml이 다운로드한 로컬 경로를 지정
+LOCAL_MODEL_PATH = "/src/models"
 LORA_PATH = "/src/loras/Flux_Capybara_v1.safetensors"
 
 class Predictor(BasePredictor):
     def setup(self):
-        """🌟 (수정) 런타임에 FluxPipeline을 다운로드하고 로드합니다 🌟"""
-        print("Booting... Attempting to download FLUX.1-dev pipeline (this may take a while)...")
+        """🌟 (수정) 런타임 다운로드 '삭제'. 로컬 캐시에서 로드합니다. 🌟"""
+        print("Booting... Loading FLUX.1-dev pipeline from local cache...")
         
-        # 1. 'push.yml'의 env: 에서 전달된 HF_TOKEN을 읽습니다.
-        huggingface_token = os.environ.get("HF_TOKEN")
+        # 1. 런타임에 Gated Model 다운로드 (삭제됨)
         
-        if not huggingface_token:
-            print("WARNING: HF_TOKEN environment variable not set. Download may fail.")
-        
-        # 2. 런타임에 Gated Model 다운로드 (Diffusers가 알아서 처리)
-        # (torch.bfloat16은 README에서 권장하는 사항입니다)
+        # 2. 로컬 캐시 경로에서 모델 로드
         self.pipe = FluxPipeline.from_pretrained(
-            MODEL_ID,
-            torch_dtype=torch.bfloat16,
-            token=huggingface_token # 🌟 인증 토큰 전달
+            LOCAL_MODEL_PATH, # 🌟 로컬 경로
+            torch_dtype=torch.bfloat16
+            # 🌟 토큰(token=)이 더 이상 필요 없음
         )
         
-        # 3. VRAM 절약을 위해 CPU 오프로드 (README 권장 사항)
+        # 3. VRAM 절약을 위해 CPU 오프로드
         self.pipe.enable_model_cpu_offload()
         
         # 4. LoRA 로드 (필요한 경우)
-        # (이 부분은 diffusers에서 LoRA를 로드하는 방식에 맞게 수정해야 할 수 있습니다.)
         # self.pipe.load_lora_weights(LORA_PATH)
         # print(f"LoRA loaded from {LORA_PATH}")
 
@@ -43,20 +37,18 @@ class Predictor(BasePredictor):
         width: int = Input(description="Width of the image.", default=1024),
         num_inference_steps: int = Input(description="Number of inference steps.", default=50),
         guidance_scale: float = Input(description="Guidance scale.", default=3.5)
-    ) -> Path: # 🌟 (수정) 반환 타입이 Path(파일)로 변경되었습니다.
+    ) -> Path: 
         """프롬프트를 사용하여 이미지를 생성합니다."""
         
-        # 🌟 (수정) Diffusers 파이프라인 실행
         image = self.pipe(
             prompt=prompt,
             height=height,
             width=width,
             guidance_scale=guidance_scale,
             num_inference_steps=num_inference_steps,
-            generator=torch.Generator("cpu").manual_seed(0) # README 권장 사항
+            generator=torch.Generator("cpu").manual_seed(0)
         ).images[0]
         
-        # 🌟 (수정) 이미지를 파일로 저장하고 경로를 반환
         output_path = "/tmp/output.png"
         image.save(output_path)
         return Path(output_path)

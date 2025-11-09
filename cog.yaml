@@ -8,17 +8,33 @@ build:
     - "transformers==4.41.2"
     - "accelerate==0.30.1"
     - "huggingface-hub[cli]"
-    # 🌟🌟🌟 NumPy 1.x/2.x 충돌 해결을 위해 버전 강제 🌟🌟🌟
+    # 🌟 v23의 NumPy 1.x/2.x 충돌 해결을 위해 버전 강제
     - "numpy<2.0" 
 
+  # 🌟 1. (신규) push.yml에서 전달할 빌드 인자를 선언합니다.
+  build_args:
+    HF_TOKEN_BUILD_ARG:
+
   run:
-    # 22GB 모델 다운로드 코드는 '모두 삭제' (v21/v22와 동일)
+    # 🌟 2. (수정) 빌드 인자(HF_TOKEN_BUILD_ARG)를 환경 변수(HF_TOKEN)로 설정
+    # 🌟 3. (수정) Python 스크립트가 이 환경 변수를 읽어 '빌드 타임'에 다운로드
+    # | (파이프)를 사용하여 여러 줄 명령어를 하나의 RUN 스텝으로 만듭니다.
+    - |
+      export HF_TOKEN=${HF_TOKEN_BUILD_ARG}
+      python -c "import os; from huggingface_hub import snapshot_download; \
+      print('Build-Time Download Started... Token starts with:', os.environ.get('HF_TOKEN')[:4]); \
+      snapshot_download( \
+        repo_id=\"black-forest-labs/FLUX.1-dev\", \
+        local_dir=\"/src/models\", \
+        token=os.environ.get(\"HF_TOKEN\"), \
+        cache_dir=\"/root/.cache/huggingface\" \
+      )"
     
-    # LoRA 파일 다운로드 (이것만 남깁니다)
+    # 4. LoRA 파일 다운로드
     - "mkdir -p /src/loras"
     - "curl -L -o /src/loras/Flux_Capybara_v1.safetensors https://github.com/SanghyeonpJeong/comfyUI_Flux_Capybara_Loras/raw/main/Flux_Capybara_v1.safetensors"
     
     # Git이 변경 사항을 인식하도록 강제 주석 추가
-    # Force update v23
+    # Force update v24
 
 predict: "predict.py:Predictor"
